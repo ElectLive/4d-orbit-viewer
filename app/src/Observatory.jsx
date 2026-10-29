@@ -1732,9 +1732,10 @@ class IMG_Save_Modal extends React.Component
         this.state = {
             display_bg_palette: false, 
             bg_color: this.background_colors [8],
+            convert_to_mp4: false,
             }
 
-
+        this.update_convert_to_mp4 = this.update_convert_to_mp4.bind (this)
         this.create_save_bg_color_palette=this.create_save_bg_color_palette.bind (this)
         this.toggle_bg_color_palette=this.toggle_bg_color_palette.bind (this)
         this.palette_button = this.palette_button.bind (this)
@@ -1751,6 +1752,44 @@ class IMG_Save_Modal extends React.Component
     update_bg_color (color)
         {
         this.setState ({bg_color: color.hex})
+        }
+
+    update_convert_to_mp4 (name, index, checked)
+        {
+        this.setState ({convert_to_mp4: checked})
+
+        this.props.update_convert_to_mp4 (checked)
+        }
+
+    create_mp4_convert_control ()
+        {
+        if  (! this.props.screen_capture.is_video)
+            {
+            return null
+            }
+
+        return (
+            <div className='grid-row op-text'>
+                <div>
+                    <V_Tooltip
+                        align="top-right"
+                        offset="50px"
+                        background={TT_BGCOLOR}
+                        text={`Convert the captured video clip from webm to MP4
+                                format before it is saved or displayed.`}
+                        >
+
+                        <V_Checkbox
+                            name="convert_to_mp4"
+                            offset="1em"
+                            checked={this.state.convert_to_mp4}
+                            onChange={this.update_convert_to_mp4}
+                            label="Convert Video to MP4 Format"
+                            />
+                    </V_Tooltip>
+                </div>
+            </div>
+            ) ;
         }
 
     button_show ()
@@ -1896,6 +1935,7 @@ class IMG_Save_Modal extends React.Component
                             screen_capture={this.props.screen_capture}
                             />
                         {this.create_color_select_control ()}
+                        {this.create_mp4_convert_control ()}
                         <Img_File_Select
                             update_save_target={this.props.update_save_target}
                             save={this.props.save}
@@ -1937,6 +1977,7 @@ class Base_Layout extends React.Component
             img_save_to_file: false,
             log_save_to_file: false,
             hide_time_control: false,
+            mp4: false,
             dialog_box : null,
             show_decals: true,
             show_planet_decals: true,
@@ -1975,6 +2016,7 @@ class Base_Layout extends React.Component
         this.save_image=this.save_image.bind (this) ;
         this.update_save_target=this.update_save_target.bind (this) 
         this.update_img_save_target=this.update_img_save_target.bind (this)
+        this.update_convert_to_mp4=this.update_convert_to_mp4.bind (this)        
         this.update_log_save_target=this.update_log_save_target.bind (this)
         this.update_bg_color=this.update_bg_color.bind (this) ;
         this.toggle_hide_time_control=this.toggle_hide_time_control.bind (this) ;
@@ -2165,6 +2207,7 @@ class Base_Layout extends React.Component
                 img_height={img_height}
                 use_narrow_format={use_min_width (V3DSpace.width)}
                 update_save_target={this.update_img_save_target} // misnamed updates save to file flag
+                update_convert_to_mp4={this.update_convert_to_mp4} // called with true when MP4 conversion is requested                
                 save={this.state.img_save_to_file} // flag, true if image should be saved to file
                 save_file_name={this.state.img_save_file_name} // file name of image save file.
                 update_save_file_name={this.update_img_save_file_name} //updates image save file name
@@ -2303,7 +2346,7 @@ class Base_Layout extends React.Component
 
     close_image_save_menu ()
         {
-        this.setState({show_image_dialog: false, }) ;
+        this.setState({show_image_dialog: false, mp4: false}) 
         }
 
     open_coord_dialog ()
@@ -2368,6 +2411,12 @@ class Base_Layout extends React.Component
             {
             this.setState ({img_save_to_file: false})         
             }
+        }
+
+    update_convert_to_mp4 (checked)
+        {
+        // This just sets a flag for MP4 conversion. It is handled elsewhere.
+        this.setState ({mp4: !! checked})
         }
 
     update_log_save_target (name, value)
@@ -2517,15 +2566,19 @@ class Base_Layout extends React.Component
 
     save_image ()
         {
-        const fn = this.state.img_save_file_name ;
+        //const fn = this.state.img_save_file_name ;
 
         // const re_check_png_extension = /^([^.]*).png$/m 
-        const re_check_any_extension = /^([^.]*)$/m
+        // const re_check_any_extension = /^([^.]*)$/m
         
-        const save_file_name = (re_check_any_extension.test (fn))? fn  + '.png': fn
+        //const save_file_name = (re_check_any_extension.test (fn))? fn  + '.png': fn
 
-        // Call either save_image or save_video as appropriate
-        this.state.screen_capture.save_media (this.state.img_save_to_file, this.state.img_save_file_name)
+        const {img_save_to_file: save, img_save_file_name: fn, mp4} = this.state
+
+        // Call either save_image or save_video as appropriate.  save_media may return a
+        // promise (video), so log any failure instead of leaving an unhandled rejection.
+        Promise.resolve (this.state.screen_capture.save_media (save, fn, mp4))
+            .catch (error => console.error (error))
 
         this.close_image_save_menu ()
         }

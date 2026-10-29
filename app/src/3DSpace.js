@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import { Clock } from 'three'
-import { saveAs } from 'file-saver'
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 

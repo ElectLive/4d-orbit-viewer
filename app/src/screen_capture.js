@@ -1,8 +1,12 @@
+import { saveAs } from 'file-saver'
 import { V3DSpace } from './App.jsx'
 import { epoch_to_date_time } from './Orbit_Display'
 import { system_time } from './entity_manager.js'
+import { filename_resolver } from './filename_resolver.js'
 
 import { TIME_RATE } from './constants.js'
+import { ALERT } from './message_box.jsx'
+
 
 const capture_mode =
     {
@@ -169,7 +173,7 @@ class Screen_Capture
         this.update_compost_bg_color = this.update_compost_bg_color.bind (this)
         this.set_screen_capture_background = this.set_screen_capture_background.bind (this)
         this.add_time_date = this.add_time_date.bind (this)
-        this.start_recording = this.start_recording.bind  (this)
+        this.finish_recording = this.finish_recording.bind (this)
         this.capture_video = this.capture_video.bind (this)
         this.start_recording = this.start_recording.bind (this)
         this.is_recording = this.is_recording.bind (this)
@@ -224,27 +228,53 @@ class Screen_Capture
             return 
             }
 
-        const timer = new Promise (resolve => {setTimeout (() => resolve (), t * 1000)})
+        let timeout_id = null
+        let handle_stop_req = null
 
+        const timer = new Promise (resolve => {
+            timeout_id = setTimeout (() => resolve (), t * 1000)
+            })
+
+        // Arrow function keeps 'this' bound, and the single reference lets us remove the listener.
         const waiter = new Promise (resolve => {
-            function handle_stop_req (event) 
-                {
-                window.removeEventListener  (this.event_name, handle_stop_req.bind (this))
-                resolve (event);
-                }       
+            handle_stop_req = (event) => resolve (event)
 
-            window.addEventListener (this.event_name, handle_stop_req);
-            }) ;
+            window.addEventListener (this.event_name, handle_stop_req)
+            }) 
 
         this.capture_video ()
 
         return Promise.race ([timer, waiter])
             .then (() => {
+                // Clean up whichever of the two lost the race.
+                clearTimeout (timeout_id)
                 clearInterval (this.req_timer)
-                this.recorder.stop ()
-                return Promise.resolve (this.get_video_data ())
-                }) ;
+                window.removeEventListener (this.event_name, handle_stop_req)
 
+                return this.finish_recording ()
+                })
+        }
+
+    finish_recording ()
+        {
+        // The final dataavailable event fires after stop (), so wait for onstop before
+        // building the blob.  Otherwise the last chunk can be missing.
+        return new Promise (resolve => {
+            if  (this.recorder.state === 'inactive')
+                {
+                resolve (this.get_video_data ())
+
+                return
+                }
+
+            this.recorder.onstop = () => {
+                this.recorder.onstop = null
+
+                resolve (this.get_video_data ())
+                }
+
+            this.recorder.stop ()
+            })
         }
 
 
@@ -406,14 +436,14 @@ class Screen_Capture
 
     elapsed_time ()
         {
-        return new Date ().now - this.start_time 
+        return Date.now () - this.start_time 
         }
 
-    save_media (save_to_file, file_name)
+    save_media (save_to_file, file_name, mp4 = false)
         {
         if  (this._mode === CAPTURE_Mode.STREAM)
             {
-            return this.save_video (save_to_file, file_name)
+            return this.save_video (save_to_file, file_name, mp4)
             }
             
         else
@@ -424,11 +454,13 @@ class Screen_Capture
 
     save_image (save_to_file = false, file_name = "image")
         {
+        const safe_file_name = filename_resolver ("image/png", file_name)
+
         this.compost.canvas.convertToBlob ({type: "image/png"})
             .then (png => {
                 if  (save_to_file)
                     {
-                    saveAs (png, file_name)
+                    saveAs (png, safe_file_name)
                     }
                 else 
                     {
@@ -437,15 +469,73 @@ class Screen_Capture
                 })
         }
 
-    save_video (save_to_file = false, file_name = "video") 
+    async save_video (save_to_file = false, file_name = "video", mp4 = false) 
         {  
+        // Determine MIME type based on mp4 flag
+        const mime_type = mp4 ? "video/mp4" : "video/webm"
+
+        // Safe file name
+        const safe_file_name = filename_resolver (mime_type, file_name)
+
+        // Get the video data first
+        const blob = this.get_video_data ()
+
+        // Open the window now, while we still have the user's click, since browsers block
+        // popups opened after a long await.  It gets pointed at the video once it's ready.
+        const popup = (save_to_file) ? null : window.open ('', 'video capture')
+
+        if  (mp4)
+            {
+            // Alert user about conversion and that it might take time
+            const status_msg = `Beginning video conversion to MP4. Please be patient.`
+
+            const id = V3DSpace.entity_manager.msg_portal.add_alert (ALERT.custom, status_msg, 30)
+
+            // handle mp4 conversion
+            console.log ('Starting conversion to MP4...')
+
+            try
+                {
+                // Simulate a long conversion delay
+                await this.wait (10000)
+
+                console.log ('Conversion finished.')
+                }
+
+            catch (error)
+                {
+                console.error (error)
+
+                return null
+                }
+
+            finally
+                {
+                // remove the alert even if the conversion fails
+                V3DSpace.entity_manager.msg_portal.clear_alert (id)
+                }
+            }
+
         if  (save_to_file)
             {
-            saveAs (this.get_video_data (), file_name)
+            saveAs (blob, safe_file_name)
             }
         else 
             {
-            window.open (URL.createObjectURL (this.get_video_data ()), 'video capture')
+            const url = URL.createObjectURL (blob)
+
+            if  (popup)
+                {
+                popup.location.href = url
+                }
+            else
+                {
+                // The popup was blocked, so fall back to downloading the file.
+                saveAs (blob, safe_file_name)
+                }
+
+            // Give the new window time to load the video before releasing the URL.
+            setTimeout (() => URL.revokeObjectURL (url), 60000)
             }
         }
 
