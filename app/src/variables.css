@@ -1,0 +1,10 @@
+:root {
+  --button_bar_height: 60px ;
+  --button_bar_width: 60px ;
+  --contrast-text-color: #111121;
+  --default-text-color: #EEEEDE;
+  --dlg_heading_color: #070101 ;
+  --dlg_text_color:#070101 ;
+  --txt_color: var(--default-text-color) ;
+  --cycle_s: 1.2s;
+}
