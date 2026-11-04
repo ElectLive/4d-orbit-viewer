@@ -1,5 +1,4 @@
 import React from 'react'
-import { Dropdown } from 'antd' 
 import { V_Button } from './UI.jsx'
 import { V_Tooltip } from './UI.jsx'
 import { V_Dropdown } from './UI.jsx'
@@ -204,7 +203,7 @@ class Icon_Bar extends React.Component
     setup_video_rec ()
         {
         this.setState ({
-            btn_icon: record_rdy_icon, // Replace with record icon when available
+            btn_icon: record_rdy_icon, 
             screenshot: false,
             media_tooltip: MEDIA_TOOLTIP_STR [1]
             })                 

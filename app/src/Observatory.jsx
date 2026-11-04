@@ -500,261 +500,6 @@ function Show_Hide_Button (props)
         ) ;    
     }
 
-/*
-class Calendar extends React.Component
-    {
-    constructor (props)
-        {
-        super (props) ;
-
-        this.handle_change = this.handle_change.bind (this) ;
-        }
-
-    handle_change (t) 
-        {
-        t.utc (true)
-        console.log ("new time ", t)
-        this.props.update_time (t) ;
-        }
-
-    render () 
-        {
-        // should there really be valueOf() in the default case?
-        const set_time = this.props.time ? moment.utc(this.props.time) : moment.utc().valueOf()
-        
-        const time_string = set_time.format('MMM DD YYYY HH:mm:ss') ;
-
-        return (
-            <div className="calendar_display">
-                <div className="time_select_display">
-                    <DatePicker value={set_time} onChange={this.handle_change} />
-                    <TimePicker value={set_time} onChange={this.handle_change} />
-                </div>
-                <div>
-                    {this.props.lbl} : {time_string}
-                </div>
-            </div>
-            );
-        }
-    }
-*/
-
-/*
-class Display_Table extends React.Component
-    {
-    constructor (props)
-        {
-        super (props)
-
-        this.state =  {
-            filter: ["available"],
-            }
-
-        this.check_for_color_change = this.check_for_color_change.bind (this) 
-        this.filter_row = this.filter_row.bind (this) ;
-        this.control_filter = this.control_filter.bind (this) 
-        //this.start   = this.start.bind (this) ;
-        this.render = this.render.bind (this)
-        }
-
-    check_for_color_change (record, prev_record)
-        {
-        return  (record.color !== prev_record.color) ? true : false ;
-        }
-
-    filter_row (value, record)
-        {
-        // Returns true (display row) or false (hide row) based on the desired filter (value).
-        // record is the record for the row being filtered.
-
-        if  (value === "selected")
-            {
-            return record.display ;
-            }
-
-        if  (value === "available")
-            {
-            return record.available ;
-            }
-
-        return 1;
-        }
-
-    control_filter (e) 
-        {
-        this.setState ({filter: [e.target.value],}) ;
-        }
-        
-    render() 
-        {
-        //let obs = this.state.obs ;
-        const select_parameters = 
-            {
-            selectedRowKeys: this.props.selected,
-            hideSelectAll: true,
-            onSelect: this.props.handle_select_change,
-            };
-            
-        const columns = 
-        [
-            {
-            title: 'Name',
-            dataIndex: 'name',
-            filters: [
-                {
-                    text: 'selected',
-                    value: 'selected',
-                },
-                {
-                    text: 'available',
-                    value: 'available',
-                },
-
-            ],
-            filteredValue: this.state.filter,
-            onFilter: this.filter_row,
-            filterMultiple: false,
-            filterDropdownVisible: false,
-            render: (obs_name, record, index) => {
-                const s = {} 
-                s.padding = "2px"
-                s.width = "90px"
-                s.minHeight = "25px" 
-                const button_style = {}
-                button_style.color = "black"
-                button_style.backgroundColor = "transparent"
-                button_style.border = "none"
-                button_style.cursor = "pointer"
-                button_style.padding = "0" 
-                button_style.outline = "none"
-                button_style.textAlign = "left"     
-                let render ;
-                if  (record.display)
-                    {
-                    render =                     
-                        <button style={button_style}
-                            onClick={() => this.props.set_focus(record.id)}>
-                            <div style={s}>{obs_name}</div>
-                        </button>;                    }
-                else
-                    {
-                    render = <div style={s}>{obs_name}</div> ;
-                    }
-                return (
-                        {
-                        props: null,
-                        children:                    
-                            <Space  size="middle">
-                                {render}
-                            </Space>
-                        } 
-                    ) ;
-                },
-            },
-
-            {
-            title: 'Color',
-            dataIndex: 'color',
-            editable: true,
-            render: (color, record, index) => {
-                const s = {} ;
-                s.padding = 2 ;
-                s.width = 40 ;
-                s.height = 15 ;
-                s.backgroundColor = color ;
-                return (
-                <Space size="middle">
-                    <a href="javascript:;" onClick={() => this.props.get_new_color (color, record)}>
-                    <div style={s}  >
-                    </div>
-                    </a>
-                </Space>
-                )
-                },
-            },
-        
-            {
-            title: 'Shape',
-            dataIndex: 'shape',
-            editable: true,
-            render: (shape, record, index) => {
-                const menu_selection = (
-                    <Menu onClick= {(item) => this.props.get_new_shape (item.key, record)}>  
-                        <Menu.Item key="sphere">
-                        sphere
-                        </Menu.Item>
-                        <Menu.Item key="cylinder">
-                        cylinder
-                        </Menu.Item>
-                        <Menu.Item key="cone">
-                        cone
-                        </Menu.Item>
-                        <Menu.Item key="diamond" disabled="true">
-                        diamond
-                        </Menu.Item>
-                        <Menu.Item key="cube">
-                        cube
-                        </Menu.Item>
-                    </Menu>
-                    ) ;      
-
-                const button_style = {}
-                button_style.backgroundColor = "transparent" ;
-                button_style.border = "1px solid black";
-                button_style.cursor = "pointer";
-                button_style.borderRadius = "4px" ;
-                button_style.overflow = "hidden";
-                button_style.outline = "none";
-                button_style.color = "black";
-        
-                return (
-                    <Dropdown overlay={menu_selection}>
-                        <button 
-                            type="button"
-                            style={button_style}
-                            onClick={e => e.preventDefault()}
-                            >
-                            {shape}<DownOutlined />
-                        </button>
-                    </Dropdown>
-                    ) ;
-               }
-            },
-        ] ;  
-
-        const selection_options = 
-            [
-                { label: 'All', value: 'all', },
-                { label: 'Available', value: 'available' },
-                { label: 'Selected', value: 'selected' },
-            ] ;
-
-       return (<div className="list_display">
-                <div className="list_display_inner_space">
-                <Radio.Group
-                    options={selection_options}
-                    onChange={this.control_filter}
-                    value={this.state.filter [0]}    
-                    optionType="button"
-                    buttonStyle="solid"
-                    defaultValue="available"
-                    />
-                </div>
-                <div className="list_display_inner_space">
-                <Table  rowSelection= {select_parameters} 
-                        columns= {columns} 
-                        pagination={false} 
-                        scroll={{ y: 240 }} 
-                        className="mission_list"
-                        dataSource={this.props.obs} 
-                        />
-                </div>
-            </div>
-            );
-        }
-    }
-*/
-
 class Get_Ground_Stations extends React.PureComponent
     {
     constructor (props)
@@ -1021,207 +766,6 @@ class  Grid_Options extends React.Component
             ) ;
         }
     }
-
-// This probably needs to go somewhere else.
-/*
-class Control_Layout extends React.Component 
-    {
-    constructor (props)
-        {
-        super (props)    
-
-        this.state =  {
-            selected: []
-            }
-
-        this.handle_select_change  = this.handle_select_change.bind (this) 
-        this.componentDidMount = this.componentDidMount.bind (this)
-        this.add_spacecraft = this.add_spacecraft.bind (this)
-        this.close_action = this.close_action.bind (this)
-        }
-        
-    add_spacecraft (record)
-        {
-        if  (V3DSpace.end_time < record.start_time || V3DSpace.start_time > record.end_time )
-            {
-            const status_msg = {
-                content: 'Orbit data not available for selected time range.',
-                className: 'time_set_error',
-                style: {marginTop: '15vh',},
-                }
-
-            message.error (status_msg) 
-
-            return false
-            }
-
-        V3DSpace.add_spacecraft ({
-            id: record.id, 
-            color: record.color, 
-            shape: record.shape, 
-            focus: null,
-            name: record.name, 
-            type: ENT_type.SPACECRAFT, 
-            start_time: record.start_time, 
-            end_time: record.end_time,
-            orbit_class: record.orbit, 
-            cadence: record.cadence
-            })
-
-        record.display = true 
-
-        return true 
-        }
-
-    handle_select_change (record, add_flag) 
-        {
-        if  (add_flag)
-            {
-
-            if  (! this.add_spacecraft(record))
-                {
-                return false
-                }
-
-            const current_selection = this.state.selected 
-            const new_selection = [...current_selection, record.key] 
- 
-            this.setState ({selected: new_selection,})
-
-            return true
-            }
-
-        else
-            {
-            const current_selection = this.state.selected 
-            const i = current_selection.indexOf (record.key) 
-                
-            const new_selection = 
-                (current_selection.length > 0) ?
-                    [...current_selection.slice(0,i),...current_selection.slice(i+1)] :
-                    [] ;
-         
-            record.display = false 
-
-            V3DSpace.remove (record.id) 
-
-            this.setState ({selected: new_selection,})
-
-            return true
-            }
-        }
-
-    componentDidMount ()
-        {
-        const sc_id = this.props.sats.map (s => s.id)
-        const select = []
-
-        this.props.request.forEach (e =>
-            {
-            const id = sc_id.indexOf (e)
-
-            if  (id !== -1)
-                {
-                if  (this.add_spacecraft (this.props.sats [id]))
-                    {
-                    select.push (this.props.sats [id].key)
-                    }
-                }            
-            }) ;
-
-        this.setState ({selected: select,})        
-        }
-
-    close_action ()
-        {
-        V3DSpace.update_orbit_data ().then (failed => {
-            if  (failed.length > 0)
-                {
-                let select = [...this.state.selected]
-
-                failed.forEach (id => {
-                     
-                    const rec = this.props.sats.findIndex (sat => sat.id === id) 
-                    const i = select.indexOf (rec)
-
-                    select = (select.length > 0) ? [...select.slice(0,i),...select.slice(i+1)] : []
-                     
-                    this.props.sats [rec].display = false
-                    })
-
-                this.setState ({selected: select,})
-                }
-            })
-
-        this.props.hide_l_sidebar ()
-        }
-
-
-    render ()
-        {
-        const { Title } = Typography;
-
-        return (
-            <div className="controls">
-                <div className="controls_title_bar">
-                    <Title style={{color: "#EEEEDE"}} level={3}>Viewer Controls</Title>
-                    <Button
-                        size="large"
-                        type="ghost"
-                        style={{border: "none"}}
-                        onClick={this.props.display_help} 
-                        >
-                        <img src={help_icon} className= "icon_image" alt="" />
-                    </Button> 
-                </div>
-                <Divider style={{borderColor: "#FFFFFF"}} />
-                <div className="cp_subsection_title ">
-                    Select start of display interval:
-                </div>
-                <Calendar   
-                    lbl={'Start Time'}
-                    time={this.props.start_time}
-                    update_time={this.props.update_view_start_time}
-                    />
-                <div className="cp_subsection_title cp_subsection_title_space">
-                    Select end of display interval:
-                </div>
-                <Calendar   
-                    lbl={'End Time'}
-                    time={this.props.end_time}
-                    update_time={this.props.update_view_end_time}
-                    />
-                <div className="cp_subsection_title cp_subsection_title_space">
-                    Select observatories:
-                </div>
-                <Display_Table 
-                    get_new_color={this.props.get_new_color}
-                    get_new_shape={this.props.get_new_shape}
-                    set_focus={this.props.set_focus}
-                    obs={this.props.sats}
-                    selected={this.state.selected}
-                    request={this.props.request}
-                    handle_select_change={this.handle_select_change}
-                    />
-                <Button 
-                    type="primary" 
-                    size='large' 
-                    onClick={this.close_action}
-                    style={{
-                        transform:'rotate(90deg)',
-                        position: 'absolute',
-                        top: '15%',
-                        left: '90%'
-                        }}
-                    >
-                    Display Orbits      
-                </Button>
-    
-            </div>
-            ) ;
-        }
-    }
-*/
 
 class Read_Properties_File extends React.Component
     {
@@ -2188,9 +1732,10 @@ class IMG_Save_Modal extends React.Component
         this.state = {
             display_bg_palette: false, 
             bg_color: this.background_colors [8],
+            convert_to_mp4: false,
             }
 
-
+        this.update_convert_to_mp4 = this.update_convert_to_mp4.bind (this)
         this.create_save_bg_color_palette=this.create_save_bg_color_palette.bind (this)
         this.toggle_bg_color_palette=this.toggle_bg_color_palette.bind (this)
         this.palette_button = this.palette_button.bind (this)
@@ -2207,6 +1752,44 @@ class IMG_Save_Modal extends React.Component
     update_bg_color (color)
         {
         this.setState ({bg_color: color.hex})
+        }
+
+    update_convert_to_mp4 (name, index, checked)
+        {
+        this.setState ({convert_to_mp4: checked})
+
+        this.props.update_convert_to_mp4 (checked)
+        }
+
+    create_mp4_convert_control ()
+        {
+        if  (! this.props.screen_capture.is_video)
+            {
+            return null
+            }
+
+        return (
+            <div className='grid-row op-text'>
+                <div>
+                    <V_Tooltip
+                        align="right"
+                        offset="50px"
+                        background={TT_BGCOLOR}
+                        text={`Convert the captured video clip from webm to MP4
+                                format before it is saved or displayed.`}
+                        >
+
+                        <V_Checkbox
+                            name="convert_to_mp4"
+                            offset="0.4em"
+                            checked={this.state.convert_to_mp4}
+                            onChange={this.update_convert_to_mp4}
+                            label="Convert Video to MP4"
+                            />
+                    </V_Tooltip>
+                </div>
+            </div>
+            ) ;
         }
 
     button_show ()
@@ -2352,6 +1935,7 @@ class IMG_Save_Modal extends React.Component
                             screen_capture={this.props.screen_capture}
                             />
                         {this.create_color_select_control ()}
+                        {this.create_mp4_convert_control ()}
                         <Img_File_Select
                             update_save_target={this.props.update_save_target}
                             save={this.props.save}
@@ -2393,6 +1977,7 @@ class Base_Layout extends React.Component
             img_save_to_file: false,
             log_save_to_file: false,
             hide_time_control: false,
+            mp4: false,
             dialog_box : null,
             show_decals: true,
             show_planet_decals: true,
@@ -2431,6 +2016,7 @@ class Base_Layout extends React.Component
         this.save_image=this.save_image.bind (this) ;
         this.update_save_target=this.update_save_target.bind (this) 
         this.update_img_save_target=this.update_img_save_target.bind (this)
+        this.update_convert_to_mp4=this.update_convert_to_mp4.bind (this)        
         this.update_log_save_target=this.update_log_save_target.bind (this)
         this.update_bg_color=this.update_bg_color.bind (this) ;
         this.toggle_hide_time_control=this.toggle_hide_time_control.bind (this) ;
@@ -2621,6 +2207,7 @@ class Base_Layout extends React.Component
                 img_height={img_height}
                 use_narrow_format={use_min_width (V3DSpace.width)}
                 update_save_target={this.update_img_save_target} // misnamed updates save to file flag
+                update_convert_to_mp4={this.update_convert_to_mp4} // called with true when MP4 conversion is requested                
                 save={this.state.img_save_to_file} // flag, true if image should be saved to file
                 save_file_name={this.state.img_save_file_name} // file name of image save file.
                 update_save_file_name={this.update_img_save_file_name} //updates image save file name
@@ -2759,7 +2346,7 @@ class Base_Layout extends React.Component
 
     close_image_save_menu ()
         {
-        this.setState({show_image_dialog: false, }) ;
+        this.setState({show_image_dialog: false, mp4: false}) 
         }
 
     open_coord_dialog ()
@@ -2824,6 +2411,12 @@ class Base_Layout extends React.Component
             {
             this.setState ({img_save_to_file: false})         
             }
+        }
+
+    update_convert_to_mp4 (checked)
+        {
+        // This just sets a flag for MP4 conversion. It is handled elsewhere.
+        this.setState ({mp4: !! checked})
         }
 
     update_log_save_target (name, value)
@@ -2973,15 +2566,19 @@ class Base_Layout extends React.Component
 
     save_image ()
         {
-        const fn = this.state.img_save_file_name ;
+        //const fn = this.state.img_save_file_name ;
 
         // const re_check_png_extension = /^([^.]*).png$/m 
-        const re_check_any_extension = /^([^.]*)$/m
+        // const re_check_any_extension = /^([^.]*)$/m
         
-        const save_file_name = (re_check_any_extension.test (fn))? fn  + '.png': fn
+        //const save_file_name = (re_check_any_extension.test (fn))? fn  + '.png': fn
 
-        // Call either save_image or save_video as appropriate
-        this.state.screen_capture.save_media (this.state.img_save_to_file, this.state.img_save_file_name)
+        const {img_save_to_file: save, img_save_file_name: fn, mp4} = this.state
+
+        // Call either save_image or save_video as appropriate.  save_media may return a
+        // promise (video), so log any failure instead of leaving an unhandled rejection.
+        Promise.resolve (this.state.screen_capture.save_media (save, fn, mp4))
+            .catch (error => console.error (error))
 
         this.close_image_save_menu ()
         }
