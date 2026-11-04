@@ -28,5 +28,12 @@ plugins: [
       { find: /^~/, replacement: "" },
     ],
   },
+  // @ffmpeg/ffmpeg starts its own module worker, so the bundled worker must be ES format.
+  worker: {
+    format: 'es',
+  },
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+  },
 })
 

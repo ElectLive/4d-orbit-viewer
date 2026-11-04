@@ -1772,7 +1772,7 @@ class IMG_Save_Modal extends React.Component
             <div className='grid-row op-text'>
                 <div>
                     <V_Tooltip
-                        align="top-right"
+                        align="right"
                         offset="50px"
                         background={TT_BGCOLOR}
                         text={`Convert the captured video clip from webm to MP4
@@ -1781,10 +1781,10 @@ class IMG_Save_Modal extends React.Component
 
                         <V_Checkbox
                             name="convert_to_mp4"
-                            offset="1em"
+                            offset="0.4em"
                             checked={this.state.convert_to_mp4}
                             onChange={this.update_convert_to_mp4}
-                            label="Convert Video to MP4 Format"
+                            label="Convert Video to MP4"
                             />
                     </V_Tooltip>
                 </div>

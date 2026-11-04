@@ -16,7 +16,6 @@ class FFMPEG_Converter
         {
         this.ffmpeg = new FFmpeg ()
         this.is_loaded = false
-        this.current_id = null
         }
 
     async load ()
@@ -106,7 +105,7 @@ class FFMPEG_Converter
         }
 
     async cleanup ()
-    {
+        {
         /**
          * Removes the temporary files from the ffmpeg virtual file system.
          */
@@ -114,18 +113,18 @@ class FFMPEG_Converter
         const names = [INPUT_NAME, OUTPUT_NAME]
 
         for (const name of names)
-        {
+            {
             try
-            {
+                {
                 await this.ffmpeg.deleteFile (name)
-            }
+                }
             catch (error)
-            {
+                {
                 // A missing file is expected here when the conversion failed early.
                 console.error (error)
+                }
             }
         }
-    }
 
     async handle_message (message)
         {
@@ -141,8 +140,6 @@ class FFMPEG_Converter
             {
             return
             }
-
-        this.current_id = id
 
         const loaded = await this.load ()
 
